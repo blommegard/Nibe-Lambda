@@ -165,21 +165,7 @@ function parseBody(body, parameters) {
 exports.handler = (event, context, callback) => {
     console.log("request: " + JSON.stringify(event));
     
-    if (event.resource == "/NibeUplink") {
-        s3.getObject({
-            Bucket: "nibe-uplink-tokens",
-            Key: "tokens.json"
-        }, function(err, data) {
-            if (err) {
-                console.log(err, err.stack);
-                redirectToAuth(callback)
-            } else {
-                console.log("Tokens:\n" + data.Body.toString());            
-                var tokens = JSON.parse(data.Body.toString());
-                refreshToken(tokens.refresh, callback)
-            }
-        });
-    } else if (event.resource == "/NibeUplink/auth") {
+    if (event.resource == "/NibeUplink/auth") {
         redirectToAuth(callback)
     } else if (event.resource == "/NibeUplink/callback") {
         let code = event.queryStringParameters.code
@@ -208,6 +194,20 @@ exports.handler = (event, context, callback) => {
                 statusCode: 200
             };
             callback(null, response);
+        });
+    } else {
+        s3.getObject({
+            Bucket: "nibe-uplink-tokens",
+            Key: "tokens.json"
+        }, function(err, data) {
+            if (err) {
+                console.log(err, err.stack);
+                redirectToAuth(callback)
+            } else {
+                console.log("Tokens:\n" + data.Body.toString());         
+                var tokens = JSON.parse(data.Body.toString());
+                refreshToken(tokens.refresh, callback)
+            }
         });
     }
 };
